@@ -1,0 +1,13 @@
+.formCenter {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.containerApprove {
+    border: 1px solid #d3d3d3;
+    border-radius: 5px;
+    padding: 1%;
+    margin-bottom: 1%;
+}
