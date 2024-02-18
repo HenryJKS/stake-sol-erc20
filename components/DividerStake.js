@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import { web3 } from "../components/ButtonWeb3";
 import {
   GridColumn,
   FormInput,
@@ -15,6 +16,7 @@ import {
 } from "semantic-ui-react";
 import stake from "../ethereum/stake";
 import mytoken from "../ethereum/mytoken";
+import { Router } from "../routes";
 
 class DividerStake extends Component {
   state = {
@@ -34,35 +36,57 @@ class DividerStake extends Component {
     this.setState({ symbol, rewardRate, rewardPeriod });
   }
 
+  onStake = async (event) => {
+    event.preventDefault();
+
+    const accounts = await web3.eth.getAccounts();
+    const stakeInstance = stake();
+
+    try {
+      await stakeInstance.methods.stake(this.state.amount).send({
+        from: accounts[0],
+      });
+      Router.pushRoute("/");
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
   render() {
     return (
       <Segment placeholder>
         <Grid columns={2} relaxed="very" stackable>
           <GridColumn>
-            <Form>
+            <Form onSubmit={this.onStake}>
               <FormInput
                 icon="ethereum"
                 iconPosition="left"
                 label="Amount"
                 placeholder={`Enter amount of ${this.state.symbol} to stake`}
                 type="value"
+                value={this.state.amount}
+                onChange={(event) =>
+                  this.setState({ amount: event.target.value })
+                }
+                required={true}
               />
-
-              <Button content="Send" primary />
+              <Button content="Stake" primary />
             </Form>
           </GridColumn>
 
           <GridColumn verticalAlign="middle">
-            <h1 style={{textAlign: 'center'}}>Policy Rewards</h1>
+            <h1 style={{ textAlign: "center" }}>Policy Rewards</h1>
             <List>
-                <ListItem>
-                    <ListIcon name="money" color="green"/>
-                    <ListContent>Rate: {this.state.rewardRate}%</ListContent>
-                </ListItem>
-                <ListItem>
-                    <ListIcon name="time" color="blue"/>
-                    <ListContent>Period: {this.state.rewardPeriod} seconds</ListContent>
-                </ListItem>
+              <ListItem>
+                <ListIcon name="money" color="green" />
+                <ListContent>Rate: {this.state.rewardRate}%</ListContent>
+              </ListItem>
+              <ListItem>
+                <ListIcon name="time" color="blue" />
+                <ListContent>
+                  Period: {this.state.rewardPeriod} seconds
+                </ListContent>
+              </ListItem>
             </List>
             <p>Stake your {this.state.symbol} to earn rewards</p>
           </GridColumn>

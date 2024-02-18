@@ -40,11 +40,10 @@ class Approve extends Component {
             ).send({
                 from: accounts[0]
             });
+            this.setState({ successApprove: "Success to Approve, check the list of approvers", address: "", amount: ""})
         } catch (error) {
-            this.setState({ messageError: error.message });
+            this.setState({ messageError: error.message, address: "", amount: ""});
         }
-
-        this.setState({ address: "", amount: ""});
     }
 
     render() {
@@ -76,8 +75,9 @@ class Approve extends Component {
                             icon="ethereum"
                             iconPosition="left"
                             label="Amount"
-                            placeholder="Enter amount to approve"
+                            placeholder="Enter token address"
                             type="number"
+                            value={this.state.amount}
                             onChange={(event) => this.setState({ amount: event.target.value })}
                             required={true}
                         />
@@ -87,6 +87,15 @@ class Approve extends Component {
                         error
                         header="Error"
                         content={this.state.messageError}
+                    />
+                    <Modal
+                    open={!!this.state.successApprove}
+                    header='Success to Approve'
+                    content={this.state.successApprove}
+                    actions={[{ key: 'done', content: 'Done', positive: true }]}
+                    onActionClick={() => this.setState({ successApprove: "" })}
+                    size="small"
+                    style={{ textAlign: "center" }}
                     />
                 </Form>
             </Layout>
