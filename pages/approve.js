@@ -23,7 +23,8 @@ class Approve extends Component {
         address: "",
         amount: "",
         messageError: "",
-        successApprove: ""
+        successApprove: "",
+        loadingButton: false
     }
 
     onSubmit = async (event) => {
@@ -31,7 +32,7 @@ class Approve extends Component {
         const accounts = await web3.eth.getAccounts();
         const mytoken = MyToken();
 
-        this.setState({ messageError: "" });
+        this.setState({ messageError: "", loadingButton: true});
 
         try {
             await mytoken.methods.approve(
@@ -40,9 +41,9 @@ class Approve extends Component {
             ).send({
                 from: accounts[0]
             });
-            this.setState({ successApprove: "Success to Approve, check the list of approvers", address: "", amount: ""})
+            this.setState({ successApprove: "Success to Approve, check the list of approvers", address: "", amount: "", loadingButton: false})
         } catch (error) {
-            this.setState({ messageError: error.message, address: "", amount: ""});
+            this.setState({ messageError: error.message, address: "", amount: "", loadingButton: false});
         }
     }
 
@@ -82,7 +83,7 @@ class Approve extends Component {
                             required={true}
                         />
                     </FormGroup>
-                    <Button primary>Send</Button>
+                    <Button primary loading={this.state.loadingButton}>Approve</Button>
                     <Message
                         error
                         header="Error"

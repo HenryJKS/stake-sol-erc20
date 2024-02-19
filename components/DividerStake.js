@@ -22,6 +22,7 @@ class DividerStake extends Component {
   state = {
     address: "",
     amount: "",
+    stakeLoading: false
   };
 
   async componentDidMount() {
@@ -42,13 +43,17 @@ class DividerStake extends Component {
     const accounts = await web3.eth.getAccounts();
     const stakeInstance = stake();
 
+    this.setState({ stakeLoading: true });
+
     try {
       await stakeInstance.methods.stake(this.state.amount).send({
         from: accounts[0],
       });
       Router.pushRoute("/");
+      this.setState({ stakeLoading: false });
     } catch (error) {
       console.log(error.message);
+      this.setState({ stakeLoading: false });
     }
   };
 
@@ -70,7 +75,7 @@ class DividerStake extends Component {
                 }
                 required={true}
               />
-              <Button content="Stake" primary />
+              <Button content="Stake" loading={this.state.stakeLoading} primary/>
             </Form>
           </GridColumn>
 
