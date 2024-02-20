@@ -5,7 +5,6 @@ import Mytoken from "../ethereum/mytoken";
 import { Container } from "semantic-ui-react";
 import styles from "../components/InfoUserStake.module.css";
 import { Divider, Button, Step, StepContent, StepDescription, StepGroup, StepTitle, Icon, Statistic, StatisticLabel, StatisticValue, Popup } from "semantic-ui-react";
-import { Router } from "../routes";
 
 class InfoUserStake extends Component {
   state = {

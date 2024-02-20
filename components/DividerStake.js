@@ -17,6 +17,7 @@ import {
 import stake from "../ethereum/stake";
 import mytoken from "../ethereum/mytoken";
 import { Router } from "../routes";
+import loadBlockchainData from "../components/InfoUserStake";
 
 class DividerStake extends Component {
   state = {
@@ -51,6 +52,7 @@ class DividerStake extends Component {
       });
       Router.pushRoute("/");
       this.setState({ stakeLoading: false });
+      loadBlockchainData();
     } catch (error) {
       console.log(error.message);
       this.setState({ stakeLoading: false });
