@@ -283,7 +283,7 @@ contract Stake {
     // policy rewards
     function policyRewardsperToken(address staker) public view returns(uint) {
         if (stakers[staker] == 0) {
-            return rewardAcumulatedPerUser[staker];
+            return 0;
         } else {
             uint currentBalance = stakers[staker]; 
             uint timeStaked = block.timestamp - lastUpdateTime[staker]; // tempo em stake
