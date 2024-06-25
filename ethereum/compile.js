@@ -1,39 +1,32 @@
-const path = require("path");
-const solc = require("solc");
 const fs = require("fs-extra");
+const path = require("path");
+const hre = require("hardhat");
 
-const buildPath = path.resolve(__dirname, "build");
-fs.removeSync(buildPath);
+async function main() {
+  await hre.run("compile");
 
-const campaignPath = path.resolve(__dirname, "contracts", "Test.sol");
+  const artifactsPath = path.resolve(__dirname, "../build/contracts");
 
-let source = fs.readFileSync(campaignPath, "utf8");
-
-let input = {
-  language: "Solidity",
-  sources: {
-    "Test.sol": {
-      content: source,
-    },
-  },
-  settings: {
-    outputSelection: {
-      "*": {
-        "*": ["*"],
-      },
-    },
-  },
-};
-
-let output = JSON.parse(solc.compile(JSON.stringify(input))).contracts[
-  'Test.sol'
-];
-
-fs.ensureDirSync(buildPath);
-
-for (let contract in output) {
-  fs.outputJsonSync(
-    path.resolve(buildPath, contract.replace(":", "") + ".json"),
-    output[contract]
-  );
+  const contracts = ["Stake.sol", "MyToken.sol"];
+  for (let contract of contracts) {
+    const contractName = contract.replace(".sol", "");
+    const contractArtifactPath = path.join(artifactsPath, contractName + ".sol", contractName + ".json");
+    if (fs.existsSync(contractArtifactPath)) {
+      const artifact = await fs.readJson(contractArtifactPath);
+      fs.outputJsonSync(
+        path.resolve(buildPath, contractName + ".json"),
+        artifact
+      );
+      console.log(`Contract ${contractName} compiled and saved to ${contractName}.json`);
+    } else {
+      console.error(`Artifact for ${contractName} not found at ${contractArtifactPath}`);
+    }
+  }
 }
+
+main()
+  .then(() => process.exit(0))
+  .catch(error => {
+    console.error(error);
+    process.exit(1);
+  });

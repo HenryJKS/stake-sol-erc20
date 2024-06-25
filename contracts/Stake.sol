@@ -7,28 +7,33 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 
-contract MyToken is ERC20, ERC20Burnable, Ownable, ERC20Permit {
+contract MyToken is ERC20, ERC20Burnable, Ownable {
 
     constructor()
         ERC20("MyToken", "HJK")
         Ownable(msg.sender)
-        ERC20Permit("MyToken")
     {
         _mint(msg.sender, 1000 * 10 ** decimals());
     }
 
-    function mint(address to, uint256 amount) public {
+    function mint(address to, uint256 amount) external {
         _mint(to, amount);
     }
 }
-
-
 
 error Staking__TransferFailed();
 error Withdraw__TransferFailed();
 error Staking__NeedsMoreThanZero();
 
-contract Stake is MyToken{ 
+contract Stake { 
+    MyToken private mytoken;
+    address public owner;
+
+    constructor(address tokenAddress) {
+        mytoken = MyToken(tokenAddress);
+        owner = mytoken.owner();
+    }
+
     mapping(address => uint) public stakers;
     uint public totalSupplyStaked;
     // rastreio de tempo
@@ -38,48 +43,37 @@ contract Stake is MyToken{
     uint public constant rewardRate = 2; // taxa de 2%
     uint public constant rewardPeriod = 30; // ganho a cada 30s
 
+    event ApprovalStake(address approver, address spender, uint amount);
+
     modifier updateData(address staker) {
         uint reward = policyRewardsperToken(staker);
         rewardAcumulatedPerUser[staker] += reward;
         lastUpdateTime[staker] = block.timestamp;
         _;
     }
-
-    function returnBalanceHJK() public view returns (uint256) {
-        return balanceOf(msg.sender);
-    }
-
-    // modifier para verificar se o saldo é maior que 0
-    modifier moreThen0() {
-        if (balanceOf(msg.sender) == 0) {
-            revert Staking__NeedsMoreThanZero();
-        }
-        _;
-    }
-
+    
     // stake
-    function stake(uint256 _amount) external updateData(msg.sender) moreThen0 {
-        require(
-            balanceOf(msg.sender) >= _amount,
-            "Staking: Not enough balance to stake"
-        );
+    function stake(uint256 _amount) external updateData(msg.sender) {
+        require(_amount > 0, "Staking: Amount must be greater than zero");
 
-        approve(msg.sender, _amount);
+        // Transfer tokens from user to contract
+        mytoken.transferFrom(msg.sender, address(this), _amount);
 
         stakers[msg.sender] += _amount;
         totalSupplyStaked += _amount;
-        transferFrom(msg.sender, owner(), _amount);
-        emit Approval(msg.sender, owner(), _amount);
+
+        emit ApprovalStake(msg.sender, address(this), _amount);
     }
 
     // unstaked
-    function unstaked(uint _amount) updateData(msg.sender) external {
+    function unstaked(uint _amount) external updateData(msg.sender) {
         require(stakers[msg.sender] >= _amount, "Withdraw__TransferFailed");
 
-        approve(owner(), _amount);
         stakers[msg.sender] -= _amount;
         totalSupplyStaked -= _amount;
-        _transfer(owner(), msg.sender, _amount);
+
+        // Transfer tokens from contract to user
+        mytoken.transfer(msg.sender, _amount);
     }
 
     // policy rewards
@@ -100,13 +94,14 @@ contract Stake is MyToken{
     function claimRewards() external updateData(msg.sender) {
         uint reward = rewardAcumulatedPerUser[msg.sender];
         require(reward > 0, "No rewards available");
-        mint(msg.sender, reward);
+
+        mytoken.mint(address(this), reward);
         rewardAcumulatedPerUser[msg.sender] = 0;
-        transfer(msg.sender, reward);
+        mytoken.transfer(msg.sender, reward);
     }
 
     // All rewards for withdraw
-    function totalWithdraw() external view returns(uint) {
+    function totalWithdrawPerUser() external view returns(uint) {
         return policyRewardsperToken(msg.sender) + rewardAcumulatedPerUser[msg.sender];
     }
 }
