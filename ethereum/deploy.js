@@ -18,7 +18,6 @@ const deploy = async () => {
 
     const contract = new web3.eth.Contract(compiledStake.abi);
 
-    // Estimar o gás necessário para o deploy
     const estimatedGas = await contract.deploy({
         data: compiledStake.bytecode,
         arguments: [addressMyToken],

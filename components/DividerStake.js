@@ -42,12 +42,14 @@ class DividerStake extends Component {
     event.preventDefault();
 
     const accounts = await web3.eth.getAccounts();
+    const decimals = await mytoken().methods.decimals().call();
     const stakeInstance = stake();
 
     this.setState({ stakeLoading: true });
 
     try {
-      await stakeInstance.methods.stake(this.state.amount).send({
+
+      await stakeInstance.methods.stake((this.state.amount * 10 ** decimals).toString()).send({
         from: accounts[0],
       });
       Router.pushRoute("/");

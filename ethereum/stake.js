@@ -1,9 +1,11 @@
 import { web3 } from "../components/ButtonWeb3";
 const Stake = require("../build/contracts/Stake.json");
-require("dotenv").config({ path: "../.env" });
 
 const stake = () => {
-    return new web3.eth.Contract(Stake.abi, process.env.NEXT_PUBLIC_ADDRESS_STAKE);
-}
+  return new web3.eth.Contract(
+    Stake.abi,
+    process.env.NEXT_PUBLIC_ADDRESS_STAKE
+  );
+};
 
 export default stake;

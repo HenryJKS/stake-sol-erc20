@@ -4,7 +4,20 @@ import Stake from "../ethereum/stake";
 import Mytoken from "../ethereum/mytoken";
 import { Container } from "semantic-ui-react";
 import styles from "../components/InfoUserStake.module.css";
-import { Divider, Button, Step, StepContent, StepDescription, StepGroup, StepTitle, Icon, Statistic, StatisticLabel, StatisticValue, Popup } from "semantic-ui-react";
+import {
+  Divider,
+  Button,
+  Step,
+  StepContent,
+  StepDescription,
+  StepGroup,
+  StepTitle,
+  Icon,
+  Statistic,
+  StatisticLabel,
+  StatisticValue,
+  Popup,
+} from "semantic-ui-react";
 
 class InfoUserStake extends Component {
   state = {
@@ -14,7 +27,7 @@ class InfoUserStake extends Component {
     balanceUserStakedDecimals: "",
     rewards: "",
     loadingClaimRewards: false,
-    interval: ""
+    interval: "",
   };
 
   async componentDidMount() {
@@ -33,35 +46,37 @@ class InfoUserStake extends Component {
     const mytoken = Mytoken();
     const accounts = await web3.eth.getAccounts();
 
-    // verify if the user is connected to the wallet
     if (!accounts[0]) {
       console.log("Nenhuma conta logada no MetaMask");
       this.setState({ account: null });
       return;
     }
 
-    //mytoken
     const decimals = await mytoken.methods.decimals().call();
     const balanceHJK = await mytoken.methods.balanceOf(accounts[0]).call();
     const balanceHJKDecimals = balanceHJK / 10 ** decimals;
 
-    //stake
     const totalSupply = await stake.methods.totalSupplyStaked().call();
     const totalSupplyDecimals = totalSupply / 10 ** decimals;
+
     const balanceUserStaked = await stake.methods.stakers(accounts[0]).call();
     const balanceUserStakedDecimals = balanceUserStaked / 10 ** decimals;
-    const rewards = await stake.methods.policyRewardsperToken(accounts[0]).call();
-    const rewardsDecimals = rewards / 10 ** decimals;
+
+
+    const policyRewardsperToken = await stake.methods.policyRewardsperToken(accounts[0]).call();
+    const policyRewardsperTokenDecimals = policyRewardsperToken / 10 ** decimals;
+
     const rewardsAcumulatedPerUser = await stake.methods.rewardAcumulatedPerUser(accounts[0]).call();
     const rewardsAcumulatedPerUserDecimals = rewardsAcumulatedPerUser / 10 ** decimals;
+
+    const rewards = policyRewardsperTokenDecimals + rewardsAcumulatedPerUserDecimals;
 
 
     this.setState({
       balanceHJKDecimals,
       totalSupplyDecimals,
       balanceUserStakedDecimals,
-      rewardsDecimals,
-      rewardsAcumulatedPerUserDecimals,
+      rewards,
       account: accounts[0],
     });
   };
@@ -73,14 +88,14 @@ class InfoUserStake extends Component {
     try {
       await stake.methods.claimRewards().send({
         from: accounts[0],
-      })
+      });
       this.setState({ loadingClaimRewards: false });
     } catch (error) {
       this.setState({ loadingClaimRewards: false });
     }
 
     this.loadBlockchainData();
-  }
+  };
 
   render() {
     if (!this.state.account) {
@@ -91,7 +106,10 @@ class InfoUserStake extends Component {
           <h5>Your Amount HJK:</h5>
           <h5>Balance Staked:</h5>
           <Divider horizontal>Pool Stake Info</Divider>
-          <h5>Total Staked Pool: {this.state.totalSupplyDecimals}</h5>
+          <h5>
+            Total Staked Pool:{" "}
+            {Math.floor(this.state.totalSupplyDecimals * 100) / 100} HJK
+          </h5>
         </Container>
       );
     }
@@ -105,14 +123,19 @@ class InfoUserStake extends Component {
             <Icon name="user" />
             <StepContent>
               <StepTitle>Your Amount HJK</StepTitle>
-              <StepDescription>{this.state.balanceHJKDecimals} HJK</StepDescription>
+              <StepDescription>
+                {Math.floor(this.state.balanceHJKDecimals * 100) / 100} HJK
+              </StepDescription>
             </StepContent>
           </Step>
           <Step>
             <Icon name="ethereum" />
             <StepContent>
               <StepTitle>Balance Staked</StepTitle>
-              <StepDescription>{this.state.balanceUserStakedDecimals} HJK</StepDescription>
+              <StepDescription>
+                {Math.floor(this.state.balanceUserStakedDecimals * 100) / 100}{" "}
+                HJK
+              </StepDescription>
             </StepContent>
           </Step>
         </StepGroup>
@@ -138,26 +161,33 @@ class InfoUserStake extends Component {
           </Step>
         </StepGroup>
         <div>
-          <Statistic horizontal size="tiny" style={{ 'margin': '1%' }}>
-            <StatisticValue>{this.state.totalSupplyDecimals} HJK</StatisticValue>
+          <Statistic horizontal size="tiny" style={{ margin: "1%" }}>
+            <StatisticValue>
+              {Math.floor(this.state.totalSupplyDecimals * 100) / 100} HJK
+            </StatisticValue>
             <StatisticLabel>Total Staked Pool</StatisticLabel>
           </Statistic>
         </div>
         <div>
-          <Statistic horizontal size="tiny" style={{ 'margin': '1%' }}>
-            <StatisticValue>{this.state.rewardsDecimals} HJK</StatisticValue>
-            <StatisticLabel>Your Rewards</StatisticLabel>
-          </Statistic>
+          <Popup
+            content="This values is your total rewards for claim"
+            trigger={
+              <Statistic horizontal size="tiny" style={{ margin: "1%" }}>
+                <StatisticValue>
+                  {Math.floor(this.state.rewards * 100) / 100} HJK
+                </StatisticValue>
+                <StatisticLabel>Your Rewards</StatisticLabel>
+              </Statistic>
+            }
+          />
         </div>
-        <div>
-          <Popup content="This value is accumulated after you unstake and have not yet claimed your reward." trigger={
-            <Statistic horizontal size="tiny" style={{ 'margin': '1%' }}>
-              <StatisticValue>{this.state.rewardsAcumulatedPerUserDecimals} HJK</StatisticValue>
-              <StatisticLabel>Your Rewards Acumulated</StatisticLabel>
-            </Statistic>
-          } />
-        </div>
-        <Button color="green" onClick={this.clainRewards} loading={this.state.loadingClaimRewards}>Claim Rewards</Button>
+        <Button
+          color="green"
+          onClick={this.clainRewards}
+          loading={this.state.loadingClaimRewards}
+        >
+          Claim Rewards
+        </Button>
       </Container>
     );
   }

@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import Layout from "../components/Layout";
+import Stake from "../ethereum/stake";
 import MyToken from "../ethereum/mytoken";
 import {
   TableRow,
@@ -12,16 +13,17 @@ import {
 
 class ApproversList extends Component {
   static async getInitialProps() {
+    const stake = Stake();
     const mytoken = MyToken();
     const decimals = await mytoken.methods.decimals().call();
-    const eventApprovers = await mytoken.getPastEvents("Approval", {
+    const eventApprovers = await stake.getPastEvents("ApprovalStake", {
       fromBlock: 0,
       toBlock: "latest",
     });
 
-    const approvers = eventApprovers.map((event) => event.returnValues.owner);
+    const approvers = eventApprovers.map((event) => event.returnValues.approver);
     const spender = eventApprovers.map((event) => event.returnValues.spender);
-    const value = eventApprovers.map((event) => event.returnValues.value);
+    const value = eventApprovers.map((event) => event.returnValues.amount);
     const valueHJK = value.map((value) => value / 10 ** decimals);
 
     return { approvers, spender, valueHJK };
