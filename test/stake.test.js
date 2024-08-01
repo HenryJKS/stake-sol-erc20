@@ -1,56 +1,27 @@
-const assert = require('chai').assert;
-const ganache = require('ganache');
-const Web3 = require('web3');
-const web3 = new Web3(ganache.provider());
+const Stake = artifacts.require("Stake");
+const MyToken = artifacts.require("MyToken");
 
-const compiledStake = require("../ethereum/build/Stake.json"); 
-require("dotenv").config({
-    path: "../.env",
+contract("Stake", (accounts) => {
+  let stake;
+  let myToken;
+
+  beforeEach(async () => {
+    myToken = await MyToken.new();
+    stake = await Stake.new(myToken.address);
+  });
+
+  it("should stake", async () => {
+    await myToken.approve(stake.address, 1000);
+    await stake.stake(1000);
+    const balance = await stake.stakers(accounts[0]);
+    assert.equal(balance, 1000);
+  });
+  
+  it("should unstake", async () => {
+    await myToken.approve(stake.address, 1000);
+    await stake.stake(1000);
+    await stake.unstaked(1000);
+    const balance = await stake.stakers(accounts[0]);
+    assert.equal(balance, 0);
+  })
 });
-
-const compiledMyToken = require("../ethereum/build/myToken.json");
-
-
-let accounts;
-let stake;
-let mytoken;
-
-beforeEach(async () => {
-    accounts = await web3.eth.getAccounts();
-    stake = await new web3.eth.Contract(compiledStake.abi)
-        .deploy({data: compiledStake.evm.bytecode.object, arguments: [process.env.ADDRESS_MYTOKEN]})
-        .send({from: accounts[0], gas: '1000000'});
-
-    mytoken = await new web3.eth.Contract(compiledMyToken.abi)
-        .deploy({data: compiledMyToken.evm.bytecode.object})
-        .send({from: accounts[0], gas: '2000000'});
-
-})
-
-describe('Stake contract', () => {
-    it('Deploy a contract', () => {
-        assert.ok(stake.options.address);
-    });
-
-    it("balance", async () => {
-        await mytoken.methods.mint(100).send({from: accounts[0]});
-        await mytoken.methods.balanceOf(accounts[0]).call().then((balance) => {
-            assert.equal(balance, 100);
-        });
-    });
-    
-    it("check balanceOf", async () => {
-        await mytoken.methods.mint(100).send({from: accounts[0]})
-        await mytoken.methods.balanceOf(accounts[0]).call().then((balance) => {
-            assert.equal(balance, 100);
-        })
-    });
-
-    it("approve and stake", async () => {
-        await mytoken.methods.mint(100).send({from: accounts[0]});
-        await mytoken.methods.approve(stake.options.address, 100).send({from: accounts[0]});
-        await stake.methods.stake(100).send({from: accounts[0]});
-    })
-    
-
-})

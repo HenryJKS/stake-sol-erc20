@@ -75,7 +75,7 @@ class Unstake extends Component {
                 this.setState({ valueUnstake: event.target.value })
               }
             />
-            <p>Total balance available: {this.state.balanceUserStaked}</p>
+            <p>Total balance available: {this.state.balanceTotalStaked}</p>
           </FormField>
           <FormField>
             <Button primary loading={this.state.loadingUnstake}>
