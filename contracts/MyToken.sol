@@ -8,15 +8,11 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 
 contract MyToken is ERC20, ERC20Burnable, Ownable {
-
-    constructor()
-        ERC20("MyToken", "HJK")
-        Ownable(msg.sender)
-    {
+    constructor() ERC20("MyToken", "HJK") Ownable(msg.sender) {
         _mint(msg.sender, 1000 * 10 ** decimals());
     }
 
-    function mint(address to, uint256 amount) onlyOwner external {
+    function mint(address to, uint256 amount) external {
         _mint(to, amount);
     }
 }
